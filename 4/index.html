@@ -80,9 +80,9 @@
             display: block !important;
         }
         
-        /* Estilos para a lista de alunos */
-        #painel-alunos {
-            margin-top: 30px;
+        /* Estilos para a lista de alunos (Status Atual) */
+        .painel {
+            margin-top: 20px;
             max-width: 400px;
             margin-left: auto;
             margin-right: auto;
@@ -92,12 +92,13 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             text-align: left;
         }
-        #painel-alunos h2 {
+        .painel h2 {
             font-size: 18px;
             text-align: center;
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
             margin-top: 0;
+            color: #333;
         }
         #lista-alunos {
             list-style-type: none;
@@ -126,6 +127,31 @@
             display: block;
             margin-top: 4px;
         }
+
+        /* Estilos do Histórico */
+        #lista-historico {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px; /* Cria uma barra de rolagem se ficar muito grande */
+            overflow-y: auto;
+        }
+        #lista-historico li {
+            font-size: 13px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+            line-height: 1.4;
+        }
+        .btn-apagar-historico {
+            background-color: #dc3545;
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .btn-apagar-historico:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -139,10 +165,17 @@
 
     <div id="mensagem"></div>
 
-    <div id="painel-alunos">
-        <h2>Status das Saídas (Limite: 2)</h2>
+    <div class="painel" id="painel-alunos">
+        <h2>Status Atual (Limite: 2)</h2>
         <ul id="lista-alunos">
             </ul>
+    </div>
+
+    <div class="painel" id="painel-historico">
+        <h2>Histórico de Saídas Salvo</h2>
+        <ul id="lista-historico">
+            </ul>
+        <button class="btn-apagar-historico" onclick="apagarHistorico()">Apagar Histórico</button>
     </div>
 
     <script>
@@ -155,35 +188,44 @@
         ];
 
         let bancoDados = {};
+        let historicoGeral = []; // Nova variável para guardar o histórico
 
-        // === NOVA FUNÇÃO: Carregar ou criar os dados salvos ===
+        // Carrega os dados salvos no navegador (Status e Histórico)
         function inicializarDados() {
             const dadosSalvos = localStorage.getItem('controleDeSaidasAlunos');
+            const historicoSalvo = localStorage.getItem('historicoControleSaidas');
             
+            // Inicializa Status Atual
             if (dadosSalvos) {
-                // Se já existe algo salvo, carrega para a memória
                 bancoDados = JSON.parse(dadosSalvos);
-                
-                // Atualização de segurança: Se você adicionar um aluno novo no código depois, 
-                // ele será incluído na lista salva sem apagar os outros.
                 listaAlunos.forEach(aluno => {
                     if (!bancoDados[aluno]) {
                         bancoDados[aluno] = { limite: 2, contador: 0, hora1: "", hora2: "" };
                     }
                 });
             } else {
-                // Se for a primeira vez abrindo a página, cria o banco do zero
                 listaAlunos.forEach(aluno => {
                     bancoDados[aluno] = { limite: 2, contador: 0, hora1: "", hora2: "" };
                 });
             }
-            // Salva para garantir que a estrutura esteja correta no navegador
+
+            // Inicializa Histórico
+            if (historicoSalvo) {
+                historicoGeral = JSON.parse(historicoSalvo);
+            }
+
             salvarDados();
         }
 
-        // === NOVA FUNÇÃO: Salvar os dados na memória do navegador ===
+        // Salva Status e Histórico no navegador
         function salvarDados() {
             localStorage.setItem('controleDeSaidasAlunos', JSON.stringify(bancoDados));
+            localStorage.setItem('historicoControleSaidas', JSON.stringify(historicoGeral));
+        }
+
+        // Função para pegar a data atual formatada (DD/MM/AAAA)
+        function obterDataAtual() {
+            return new Date().toLocaleDateString('pt-BR');
         }
 
         // Função para pegar a hora atual formatada (HH:MM)
@@ -194,10 +236,10 @@
             return `${horas}:${minutos}`;
         }
 
-        // Função para atualizar a lista na tela
+        // Atualiza a lista visual de Status Atual
         function atualizarListaTela() {
             const ul = document.getElementById('lista-alunos');
-            ul.innerHTML = ''; // Limpa a lista atual
+            ul.innerHTML = '';
 
             listaAlunos.forEach(aluno => {
                 const li = document.createElement('li');
@@ -222,7 +264,25 @@
             });
         }
 
-        // Função para zerar todas as saídas ao ler o QR Code EDUCADOR
+        // Atualiza a lista visual do Histórico
+        function atualizarHistoricoTela() {
+            const ulHist = document.getElementById('lista-historico');
+            ulHist.innerHTML = '';
+
+            if (historicoGeral.length === 0) {
+                ulHist.innerHTML = '<li style="text-align:center; color:#999;">Nenhum registro no histórico.</li>';
+                return;
+            }
+
+            // O histórico é exibido mostrando o mais recente no topo
+            historicoGeral.forEach(registro => {
+                const li = document.createElement('li');
+                li.innerHTML = registro;
+                ulHist.appendChild(li);
+            });
+        }
+
+        // Zera o Status Atual (ao ler o QR EDUCADOR)
         function reiniciarContagem() {
             listaAlunos.forEach(aluno => {
                 bancoDados[aluno].contador = 0;
@@ -230,13 +290,24 @@
                 bancoDados[aluno].hora2 = "";
             });
             
-            salvarDados(); // Salva os dados zerados permanentemente
+            salvarDados();
             
             const msgDiv = document.getElementById('mensagem');
-            msgDiv.innerHTML = "SISTEMA REINICIADO!<br><br>Todas as saídas foram zeradas com sucesso.";
+            msgDiv.innerHTML = "SISTEMA REINICIADO!<br><br>As saídas atuais foram zeradas (o histórico foi mantido).";
             msgDiv.className = "azul";
             
             atualizarListaTela();
+        }
+
+        // Apaga o Histórico Permanentemente
+        function apagarHistorico() {
+            const confirmacao = confirm("Tem certeza que deseja apagar todo o histórico gravado? Esta ação não pode ser desfeita.");
+            if (confirmacao) {
+                historicoGeral = []; // Zera a lista do histórico
+                salvarDados(); // Salva vazio no navegador
+                atualizarHistoricoTela(); // Atualiza a tela
+                alert("Histórico apagado com sucesso.");
+            }
         }
 
         // --- Lógica do Leitor de QR Code ---
@@ -262,7 +333,7 @@
                 configCamera,
                 configLeitor,
                 aoLerQrCode,
-                (errorMessage) => {} // Ignora erros de leitura contínua
+                (errorMessage) => {} 
             ).catch((err) => {
                 alert("Erro ao acessar a câmera. Verifique as permissões do navegador.");
             });
@@ -284,7 +355,7 @@
             clearTimeout(tempoEspera);
             tempoEspera = setTimeout(() => { ultimoLido = ""; }, 4000);
 
-            // Se for o QR Code do educador, reinicia o sistema e salva
+            // Lê QR Code do Educador
             if (qrLido === "EDUCADOR") {
                 reiniciarContagem();
                 return;
@@ -292,39 +363,51 @@
 
             const msgDiv = document.getElementById('mensagem');
 
-            // Lógica normal dos alunos
+            // Lê QR Code do Aluno
             if (bancoDados[qrLido]) {
                 if (bancoDados[qrLido].contador < bancoDados[qrLido].limite) {
                     bancoDados[qrLido].contador++;
                     const horaAtual = obterHoraAtual();
+                    const dataAtual = obterDataAtual();
 
-                    // Registra o horário da saída
+                    // Registra o horário da saída atual
                     if (bancoDados[qrLido].contador === 1) {
                         bancoDados[qrLido].hora1 = horaAtual;
                     } else if (bancoDados[qrLido].contador === 2) {
                         bancoDados[qrLido].hora2 = horaAtual;
                     }
 
-                    salvarDados(); // <--- SALVA OS DADOS APÓS CADA SAÍDA
+                    // --- CRIAÇÃO DO REGISTRO NO HISTÓRICO ---
+                    const textoHistorico = `📅 ${dataAtual} às ⏰ ${horaAtual}<br><strong>${qrLido}</strong> (Utilizou a ${bancoDados[qrLido].contador}ª saída)`;
+                    historicoGeral.unshift(textoHistorico); // Adiciona no início da lista
 
+                    // Salva tudo na memória
+                    salvarDados(); 
+
+                    // Feedback visual principal
                     msgDiv.innerHTML = `${qrLido}<br><br>Saída permitida (${bancoDados[qrLido].contador}/2)<br>⏰ Horário: ${horaAtual}`;
                     msgDiv.className = "verde";
                 } else {
                     msgDiv.innerHTML = `${qrLido}<br><br>Saída negada!<br>Limite de 2 saídas atingido.`;
                     msgDiv.className = "vermelho";
                 }
+                
+                // Atualiza as duas áreas da tela
                 atualizarListaTela();
+                atualizarHistoricoTela();
+                
             } else {
                 msgDiv.innerHTML = `QR Code LIDO: ${qrLido}<br><br>Aluno não encontrado.`;
                 msgDiv.className = "amarelo";
             }
         }
 
-        // Inicializa as funções quando a página carrega
+        // Ao abrir a página
         window.onload = function() {
-            inicializarDados(); // Carrega os dados salvos antes de tudo
+            inicializarDados();
             iniciarCamera();
             atualizarListaTela();
+            atualizarHistoricoTela();
         };
 
     </script>
