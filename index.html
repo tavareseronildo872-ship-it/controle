@@ -1,62 +1,60 @@
-function processarAluno(nomeLido){
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Saída de Alunos</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .box { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+        #mensagem { font-size: 24px; font-weight: bold; margin-top: 20px; padding: 10px; }
+        .verde { color: green; border: 2px solid green; display: inline-block; }
+        .vermelho { color: red; border: 2px solid red; display: inline-block; }
+    </style>
+</head>
+<body>
 
-```
-const aluno = nomeLido.trim().toUpperCase();
+    <div class="box">
+        <h2>Cadastro de Alunos</h2>
+        <input type="text" id="nomeAluno" placeholder="Nome/ID do Aluno">
+        <input type="number" id="limiteSaidas" placeholder="Limite de saídas">
+        <button onclick="cadastrar()">Cadastrar</button>
+    </div>
 
-const dados = carregar();
+    <div class="box">
+        <h2>Leitor de QR Code (Simulado)</h2>
+        <input type="text" id="leituraQr" placeholder="Escaneie o QR Code aqui" oninput="processarLeitura()">
+    </div>
 
-if(!dados.registros.hasOwnProperty(aluno)){
+    <div id="mensagem"></div>
 
-    document.getElementById("resultado").innerHTML =
-    `<div style="
-        background:#f44336;
-        color:white;
-        padding:20px;
-        border-radius:10px;
-        font-size:28px;
-        font-weight:bold;">
-        ALUNO NÃO CADASTRADO
-    </div>`;
+    <script>
+        const bancoDados = {};
 
-    return;
-}
+        function cadastrar() {
+            const nome = document.getElementById('nomeAluno').value;
+            const limite = parseInt(document.getElementById('limiteSaidas').value);
+            
+            if(nome && limite) {
+                bancoDados[nome] = { limite: limite, contador: 0 };
+                alert("Aluno " + nome + " cadastrado com limite de " + limite);
+            }
+        }
 
-if(dados.registros[aluno] >= 2){
-
-    document.getElementById("resultado").innerHTML =
-    `<div style="
-        background:#f44336;
-        color:white;
-        padding:20px;
-        border-radius:10px;
-        font-size:28px;
-        font-weight:bold;">
-        LIMITE DE SAÍDAS ATINGIDO
-    </div>`;
-
-    return;
-}
-
-dados.registros[aluno]++;
-
-salvar(dados);
-
-document.getElementById("resultado").innerHTML =
-`<div style="
-    background:#4CAF50;
-    color:white;
-    padding:20px;
-    border-radius:10px;
-    font-size:32px;
-    font-weight:bold;">
-    AUTORIZADO PARA SAIR
-    <br><br>
-    ${aluno}
-    <br>
-    (${dados.registros[aluno]}/2)
-</div>`;
-
-atualizarTabela();
-```
-
-}
+        function processarLeitura() {
+            const id = document.getElementById('leituraQr').value;
+            const msgDiv = document.getElementById('mensagem');
+            
+            if (bancoDados[id]) {
+                if (bancoDados[id].contador < bancoDados[id].limite) {
+                    bancoDados[id].contador++;
+                    msgDiv.innerHTML = "Saída permitida (" + bancoDados[id].contador + "/" + bancoDados[id].limite + ")";
+                    msgDiv.className = "verde";
+                } else {
+                    msgDiv.innerHTML = "Saída negada! Limite atingido.";
+                    msgDiv.className = "vermelho";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
