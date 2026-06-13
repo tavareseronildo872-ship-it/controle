@@ -30,10 +30,9 @@
             width: 100%;
         }
         button {
-            margin-top: 15px;
+            margin-top: 10px;
             padding: 12px 20px;
             font-size: 16px;
-            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
@@ -41,19 +40,29 @@
             width: 100%;
             max-width: 400px;
         }
-        button:hover {
+        .btn-camera {
+            background-color: #007bff;
+        }
+        .btn-camera:hover {
             background-color: #0056b3;
         }
+        .btn-reiniciar {
+            background-color: #dc3545;
+            margin-top: 15px;
+        }
+        .btn-reiniciar:hover {
+            background-color: #c82333;
+        }
         #mensagem {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             margin-top: 20px;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             max-width: 400px;
             margin-left: auto;
             margin-right: auto;
-            display: none; /* Escondido até ter uma leitura */
+            display: none;
         }
         .verde {
             color: #155724;
@@ -73,6 +82,47 @@
             border: 2px solid #ffeeba;
             display: block !important;
         }
+        
+        /* Estilos para a lista de alunos */
+        #painel-alunos {
+            margin-top: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+        #painel-alunos h2 {
+            font-size: 18px;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        #lista-alunos {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Duas colunas para economizar espaço */
+            gap: 10px;
+        }
+        #lista-alunos li {
+            font-size: 13px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .limite-atingido {
+            color: #721c24;
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -81,13 +131,19 @@
 
     <div id="leitor-container">
         <div id="reader"></div>
-        <button onclick="alternarCamera()">Mudar Câmera (Frente/Trás)</button>
+        <button class="btn-camera" onclick="alternarCamera()">Mudar Câmera (Frente/Trás)</button>
+        <button class="btn-reiniciar" onclick="reiniciarContagem()">Reiniciar Todas as Saídas</button>
     </div>
 
     <div id="mensagem"></div>
 
+    <div id="painel-alunos">
+        <h2>Status das Saídas (Limite: 2)</h2>
+        <ul id="lista-alunos">
+            </ul>
+    </div>
+
     <script>
-        // Lista de alunos fixada no código
         const listaAlunos = [
             "DAVI LUIZ", "ELLYSA MARIA", "FRANCISCO ARTHUR", "IGOR GABRIEL",
             "JOAO VITOR", "KAUAN", "KELVEN HALERRANDRO", "KEVILLY", "LUANA",
@@ -96,16 +152,50 @@
             "WALLYSON", "YAN VICTOR"
         ];
 
-        // Cria o banco de dados com limite de 2 saídas para todos
+        // Cria o banco de dados
         const bancoDados = {};
         listaAlunos.forEach(aluno => {
             bancoDados[aluno] = { limite: 2, contador: 0 };
         });
 
-        let html5QrCode;
-        let cameraTraseira = true; // Inicia assumindo câmera traseira
+        // Função para atualizar a lista na tela
+        function atualizarListaTela() {
+            const ul = document.getElementById('lista-alunos');
+            ul.innerHTML = ''; // Limpa a lista atual
 
-        // Inicia a câmera
+            listaAlunos.forEach(aluno => {
+                const li = document.createElement('li');
+                const uso = bancoDados[aluno].contador;
+                const max = bancoDados[aluno].limite;
+                
+                li.innerText = `${aluno}: ${uso}/${max}`;
+                
+                // Se atingiu o limite, muda a cor do item na lista
+                if (uso >= max) {
+                    li.className = "limite-atingido";
+                }
+                
+                ul.appendChild(li);
+            });
+        }
+
+        // Função para zerar todas as saídas
+        function reiniciarContagem() {
+            const confirmacao = confirm("Tem certeza que deseja zerar as saídas de todos os alunos?");
+            if (confirmacao) {
+                listaAlunos.forEach(aluno => {
+                    bancoDados[aluno].contador = 0;
+                });
+                document.getElementById('mensagem').style.display = "none"; // Oculta a mensagem grande
+                atualizarListaTela(); // Atualiza a tabela lá embaixo
+                alert("Todas as saídas foram reiniciadas com sucesso!");
+            }
+        }
+
+        // --- Lógica do Leitor de QR Code ---
+        let html5QrCode;
+        let cameraTraseira = true;
+
         function iniciarCamera() {
             const configCamera = cameraTraseira ? { facingMode: "environment" } : { facingMode: "user" };
             const configLeitor = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -125,9 +215,9 @@
                 configCamera,
                 configLeitor,
                 aoLerQrCode,
-                (errorMessage) => { /* Ignora erros contínuos de não encontrar QR Code */ }
+                (errorMessage) => { /* Ignora erros de "QR não encontrado" para não travar o console */ }
             ).catch((err) => {
-                alert("Erro ao acessar a câmera. Verifique as permissões.");
+                alert("Erro ao acessar a câmera. Verifique as permissões do navegador.");
             });
         }
 
@@ -136,16 +226,13 @@
             iniciarCamera();
         }
 
-        // Variáveis para evitar que a câmera leia o mesmo código várias vezes seguidas
         let ultimoLido = "";
         let tempoEspera;
 
-        // Função acionada quando o QR Code é lido com sucesso
         function aoLerQrCode(textoDecodificado) {
-            // Remove espaços extras no início e fim, e deixa tudo maiúsculo para bater com a lista
             const nomeAluno = textoDecodificado.trim().toUpperCase();
 
-            // Evita leitura dupla do mesmo código em menos de 4 segundos
+            // Evita ler o mesmo código sem parar
             if (nomeAluno === ultimoLido) return;
             ultimoLido = nomeAluno;
             clearTimeout(tempoEspera);
@@ -153,7 +240,6 @@
 
             const msgDiv = document.getElementById('mensagem');
 
-            // Verifica se o aluno está na lista
             if (bancoDados[nomeAluno]) {
                 if (bancoDados[nomeAluno].contador < bancoDados[nomeAluno].limite) {
                     bancoDados[nomeAluno].contador++;
@@ -163,14 +249,19 @@
                     msgDiv.innerHTML = `${nomeAluno}<br><br>Saída negada!<br>Limite de 2 saídas atingido.`;
                     msgDiv.className = "vermelho";
                 }
+                // Atualiza a lista visual lá embaixo
+                atualizarListaTela();
             } else {
-                msgDiv.innerHTML = `QR Code LIDO: ${nomeAluno}<br><br>Aluno não encontrado na lista.`;
+                msgDiv.innerHTML = `QR Code LIDO: ${nomeAluno}<br><br>Aluno não encontrado.`;
                 msgDiv.className = "amarelo";
             }
         }
 
-        // Inicia a câmera automaticamente quando a página carrega
-        window.onload = iniciarCamera;
+        // Inicializa as funções quando a página carrega
+        window.onload = function() {
+            iniciarCamera();
+            atualizarListaTela(); // Gera a lista pela primeira vez com tudo zerado
+        };
 
     </script>
 </body>
