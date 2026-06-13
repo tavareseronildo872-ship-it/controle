@@ -12,70 +12,168 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 10px; background-color: #f4f6f9; margin: 0; color: #333; }
-        h1, h2, h3 { color: #2c3e50; }
-        button { padding: 10px 15px; font-size: 14px; color: white; border: none; border-radius: 5px; cursor: pointer; background-color: #007bff; transition: 0.2s; }
-        button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; }
-        input, select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; margin-bottom: 10px; }
+        :root {
+            --bg-principal: #f8fafc;
+            --texto-principal: #1e293b;
+            --cor-primaria: #3b82f6;
+            --cor-primaria-hover: #2563eb;
+            --cor-adm: #475569;
+            --cor-diretor: #0f766e;
+            --cor-professor: #15803d;
+            --cor-erro: #e11d48;
+            --cor-sucesso: #16a34a;
+            --card-bg: #ffffff;
+            --borda: #e2e8f0;
+        }
+
+        body { 
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center; 
+            padding: 15px; 
+            background-color: var(--bg-principal); 
+            margin: 0; 
+            color: var(--texto-principal); 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        .topo-barra { display: flex; justify-content: space-between; align-items: center; background: #343a40; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .topo-barra h2 { margin: 0; color: white; font-size: 18px; }
-        .btn-sair { background-color: #dc3545; padding: 6px 12px; font-size: 12px; }
-        .btn-sair:hover { background-color: #c82333; }
+        h1, h2, h3 { color: #0f172a; margin-top: 0; }
+        
+        button { 
+            padding: 12px 18px; 
+            font-size: 14px; 
+            font-weight: 600;
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            background-color: var(--cor-primaria); 
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        button:hover { background-color: var(--cor-primaria-hover); transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background-color: #cbd5e1; cursor: not-allowed; transform: none; }
+        
+        input, select { 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid var(--borda); 
+            font-size: 14px; 
+            margin-bottom: 12px; 
+            background-color: #fff;
+            color: var(--texto-principal);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--cor-primaria); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        
+        .topo-barra { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--cor-adm); 
+            color: white; 
+            padding: 14px 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .topo-barra h2 { margin: 0; color: white; font-size: 18px; font-weight: 600; }
+        .btn-sair { background-color: #ef4444; padding: 8px 14px; font-size: 13px; }
+        .btn-sair:hover { background-color: #dc2626; }
 
         /* --- TELAS --- */
-        .tela { display: none; max-width: 600px; margin: 0 auto; }
-        #tela-login { display: block; max-width: 350px; margin: 60px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        #tela-login input { width: 100%; box-sizing: border-box; text-align: center; font-size: 18px; letter-spacing: 2px; }
-        #tela-login button { width: 100%; font-size: 16px; padding: 12px; background-color: #28a745; font-weight: bold; }
-        #status-conexao { font-size: 12px; color: #888; margin-bottom: 15px; }
+        .tela { display: none; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s ease-in-out; }
+        
+        #tela-login { 
+            display: block; 
+            max-width: 360px; 
+            margin: 80px auto; 
+            background: var(--card-bg); 
+            padding: 35px 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); 
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        #tela-login h2 { margin-bottom: 8px; font-size: 24px; font-weight: 700; }
+        #tela-login input { width: 100%; text-align: center; font-size: 20px; letter-spacing: 4px; border-width: 2px; }
+        #tela-login button { width: 100%; font-size: 16px; padding: 14px; background-color: var(--cor-sucesso); font-weight: bold; margin-top: 5px; }
+        #tela-login button:hover { background-color: #15803d; }
+        #status-conexao { font-size: 13px; color: #64748b; margin-bottom: 20px; font-weight: 500; }
 
         /* --- GERENCIAMENTO --- */
-        .card-gerencia { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: left; border-left: 5px solid #17a2b8; }
-        .card-gerencia h3 { margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .linha-form { display: flex; gap: 10px; margin-bottom: 15px; }
-        .linha-form input { flex: 1; margin: 0; }
-        .linha-form button { margin: 0; }
-        .lista-itens { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; }
-        .lista-itens li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eee; background: #fafafa; font-size: 13px; }
-        .btn-remover { background-color: #dc3545; font-size: 11px; padding: 5px 8px; }
+        .card-gerencia { 
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); 
+            margin-bottom: 25px; 
+            text-align: left; 
+            border-left: 5px solid var(--cor-primaria);
+            border-top: 1px solid rgba(0,0,0,0.01);
+            border-right: 1px solid rgba(0,0,0,0.01);
+            border-bottom: 1px solid rgba(0,0,0,0.01);
+        }
+        .card-gerencia h3 { margin-top: 0; font-size: 16px; font-weight: 700; border-bottom: 1px solid var(--borda); padding-bottom: 12px; margin-bottom: 18px; color: #334155; }
+        .linha-form { display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
+        .linha-form input { flex: 1; min-width: 150px; margin: 0; }
+        .linha-form button { margin: 0; white-space: nowrap; }
+        
+        .lista-itens { list-style: none; padding: 0; margin: 0; max-height: 220px; overflow-y: auto; border: 1px solid var(--borda); border-radius: 8px; background: #f8fafc; }
+        .lista-itens li { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--borda); font-size: 13px; color: #475569; }
+        .lista-itens li:last-child { border-bottom: none; }
+        .btn-remover { background-color: #fee2e2; color: #ef4444; font-size: 12px; padding: 6px 10px; font-weight: 600; }
+        .btn-remover:hover { background-color: #ef4444; color: white; }
 
         /* --- DIRETOR --- */
-        .filtro-diretor { text-align: left; margin-bottom: 15px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .filtro-diretor select { width: 100%; font-size: 16px; font-weight: bold; background: #e9ecef; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; font-size: 13px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
-        th { background-color: #343a40; color: white; font-weight: normal; }
-        tr:hover { background-color: #f1f1f1; }
-        .status-ok { color: #28a745; font-weight: bold; }
-        .status-cheio { color: #dc3545; font-weight: bold; background-color: #ffeeb5; }
+        .filtro-diretor { text-align: left; margin-bottom: 20px; background: var(--card-bg); padding: 18px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid var(--borda); }
+        .filtro-diretor label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #64748b; }
+        .filtro-diretor select { width: 100%; font-size: 16px; font-weight: 600; background: #f1f5f9; border: none; margin: 0; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border-radius: 12px; overflow: hidden; font-size: 14px; border: 1px solid var(--borda); }
+        th, td { padding: 14px; border-bottom: 1px solid var(--borda); text-align: center; }
+        th { background-color: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8fafc; }
+        .status-ok { color: var(--cor-sucesso); font-weight: 700; }
+        .status-cheio { color: #b91c1c; font-weight: 700; background-color: #fef2f2; border-radius: 4px; display: inline-block; padding: 2px 8px; }
 
         /* --- PROFESSOR --- */
-        #leitor-container { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        #reader { width: 100%; }
-        .btn-camera { width: 100%; margin-top: 10px; background-color: #6c757d; }
-        .painel-alunos { text-align: left; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px;}
-        .painel-alunos h3 { margin-top: 0; text-align: center; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
-        #lista-prof-alunos { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
-        #lista-prof-alunos li { background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 14px; }
-        .limite-atingido { border-color: #f5c6cb !important; background-color: #f8d7da !important; color: #721c24; }
+        #leitor-container { background: var(--card-bg); padding: 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 25px; border: 1px solid var(--borda); overflow: hidden; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: none !important; }
+        #reader video { border-radius: 12px; }
+        .btn-camera { width: 100%; margin-top: 12px; background-color: #64748b; }
+        .btn-camera:hover { background-color: #475569; }
         
-        #mensagem { font-size: 18px; font-weight: bold; margin: 15px 0; padding: 15px; border-radius: 8px; display: none; }
-        .verde { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; display: block !important; }
-        .vermelho { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; display: block !important; }
+        .painel-alunos { text-align: left; background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 25px; border: 1px solid var(--borda); }
+        .painel-alunos h3 { margin-top: 0; text-align: center; font-size: 16px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; color: #334155; }
+        #lista-prof-alunos { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0; }
+        #lista-prof-alunos li { background: #f8fafc; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--borda); font-size: 14px; transition: all 0.2s; color: #334155; }
+        .limite-atingido { border-color: #fca5a5 !important; background-color: #fef2f2 !important; color: #991b1b !important; font-weight: 500; }
+        
+        #mensagem { font-size: 16px; font-weight: 700; margin: 20px 0; padding: 16px; border-radius: 12px; display: none; line-height: 1.5; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .verde { color: #166534; background-color: #dcfce7; border: 1px solid #bbf7d0; display: block !important; }
+        .vermelho { color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5; display: block !important; }
 
-        /* --- ESTILOS DO CARTÃO QR (TELA NORMAL) --- */
-        #area-impressao { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-        .cartao-qr { display: inline-block; border: 2px dashed #ccc; padding: 15px; background: #fafafa; border-radius: 8px; width: 160px; text-align: center; }
-        .cartao-qr h3 { margin-top: 0; margin-bottom: 10px; color: #333; font-size: 14px; font-weight: bold; word-wrap: break-word; }
+        /* --- ESTILOS DO CARTÃO QR --- */
+        #area-impressao { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .cartao-qr { display: inline-block; border: 2px dashed #cbd5e1; padding: 18px; background: #fff; border-radius: 12px; width: 160px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .cartao-qr h3 { margin-top: 0; margin-bottom: 12px; color: #1e293b; font-size: 13px; font-weight: 700; word-wrap: break-word; line-height: 1.4; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* --- IMPRESSÃO DO QR CODE --- */
         @media print {
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; justify-content: flex-start; }
-            .cartao-qr { border: 1px solid #000; padding: 15px; margin: 5px; page-break-inside: avoid; background: white; border-radius: 0; }
+            .cartao-qr { border: 1px solid #000; padding: 15px; margin: 5px; page-break-inside: avoid; background: white; border-radius: 0; box-shadow: none; }
             .btn-imprimir { display: none !important; }
         }
     </style>
@@ -85,7 +183,7 @@
     <div id="tela-login" class="tela">
         <h2>Acesso ao Sistema</h2>
         <div id="status-conexao">Carregando banco de dados...</div>
-        <input type="password" id="input-login" placeholder="Digite a senha" onkeypress="verificarEnterLogin(event)" disabled>
+        <input type="password" id="input-login" placeholder="Sua Senha" onkeypress="verificarEnterLogin(event)" disabled>
         <button id="btn-entrar" onclick="fazerLogin()" disabled>Entrar</button>
     </div>
 
@@ -99,9 +197,9 @@
             <h3>Senha Mestra (Acesso do Diretor)</h3>
             <div class="linha-form">
                 <input type="text" id="input-senha-diretor" placeholder="Nova senha mestre">
-                <button onclick="salvarSenhaDiretor()" style="background-color: #28a745;">Atualizar</button>
+                <button onclick="salvarSenhaDiretor()" style="background-color: var(--cor-sucesso);">Atualizar</button>
             </div>
-            <small style="color:#666;">A senha atual está oculta por segurança. Digite uma nova para substituir.</small>
+            <small style="color:#64748b; font-weight: 500;">A senha atual está oculta por segurança. Digite uma nova para substituir.</small>
         </div>
 
         <div class="card-gerencia">
@@ -116,25 +214,25 @@
 
         <div class="card-gerencia">
             <h3>Passo 2: Cadastrar Aluno e Gerar QR Code</h3>
-            <select id="select-turma-aluno" onchange="carregarAlunosDaTurma()" style="width:100%;"></select>
+            <select id="select-turma-aluno" onchange="carregarAlunosDaTurma()" style="width:100%; font-weight: 600;"></select>
             <div class="linha-form">
                 <input type="text" id="input-novo-aluno" placeholder="NOME DO ALUNO" style="text-transform: uppercase;" onkeypress="if(event.key === 'Enter') cadastrarAlunoEGerarQR()">
                 <button onclick="cadastrarAlunoEGerarQR()">Cadastrar</button>
             </div>
             
-            <button onclick="gerarImpressaoColetiva()" style="width:100%; background-color:#6f42c1; margin-bottom: 15px;">🖨️ Gerar e Imprimir TODOS da Turma</button>
+            <button onclick="gerarImpressaoColetiva()" style="width:100%; background-color:#6366f1; margin-bottom: 15px;">🖨️ Gerar e Imprimir TODOS da Turma</button>
 
             <ul class="lista-itens" id="lista-adm-alunos"></ul>
 
-            <div id="area-acoes-impressao" style="display:none; margin-top:20px; padding: 20px; border: 1px solid #ccc; background: #fff; border-radius: 8px;">
-                <button class="btn-imprimir" onclick="window.print()" style="background-color: #17a2b8; width: 100%; margin-bottom: 20px; padding: 15px; font-weight:bold;">🖨️ Imprimir Cartões Abaixo</button>
+            <div id="area-acoes-impressao" style="display:none; margin-top:20px; padding: 20px; border: 1px solid var(--borda); background: #fff; border-radius: 12px;">
+                <button class="btn-imprimir" onclick="window.print()" style="background-color: #06b6d4; width: 100%; margin-bottom: 20px; padding: 15px; font-weight:bold;">🖨️ Imprimir Cartões Abaixo</button>
                 <div id="area-impressao"></div>
             </div>
         </div>
     </div>
 
     <div id="tela-diretor" class="tela">
-        <div class="topo-barra" style="background: #17a2b8;">
+        <div class="topo-barra" style="background: var(--cor-diretor);">
             <h2>📊 Painel do Diretor</h2>
             <button class="btn-sair" onclick="fazerLogout()">Sair</button>
         </div>
@@ -154,15 +252,14 @@
                         <th>2ª Saída</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-diretor-corpo">
-                    </tbody>
+                <tbody id="tabela-diretor-corpo"></tbody>
             </table>
         </div>
-        <button style="margin-top:20px; background-color:#dc3545; width:100%;" onclick="zerarTurmaDiretor()">Zerar Contagens desta Turma</button>
+        <button style="margin-top:20px; background-color:var(--cor-erro); width:100%;" onclick="zerarTurmaDiretor()">Zerar Contagens desta Turma</button>
     </div>
 
     <div id="tela-professor" class="tela">
-        <div class="topo-barra" style="background: #28a745;">
+        <div class="topo-barra" style="background: var(--cor-professor);">
             <h2 id="titulo-turma-prof">Turma</h2>
             <button class="btn-sair" onclick="fazerLogout()">Sair</button>
         </div>
@@ -197,20 +294,17 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Variáveis Globais de Estado
         let dbConfig = null; 
         let dbAlunos = {};   
         let refConfig = database.ref('config');
         let refAlunosAtuais = null;
         let turmaAtual = null; 
         
-        // Leitor QR
         let html5QrCode = null;
         let cameraTraseira = true;
         let ultimoLido = "";
         let tempoEspera;
 
-        // Escuta inicial
         refConfig.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 dbConfig = snapshot.val();
@@ -224,9 +318,8 @@
                 refConfig.set(dbConfig);
             }
             
-            // Libera tela de login
             document.getElementById('status-conexao').innerText = "🟢 Sistema Online e Pronto";
-            document.getElementById('status-conexao').style.color = "#28a745";
+            document.getElementById('status-conexao').style.color = "var(--cor-sucesso)";
             document.getElementById('input-login').disabled = false;
             document.getElementById('btn-entrar').disabled = false;
 
@@ -291,7 +384,7 @@
         }
 
         // ==========================================
-        // 3. MÓDULO DE GERENCIAMENTO (ADM) ATUALIZADO
+        // 3. MÓDULO DE GERENCIAMENTO (ADM)
         // ==========================================
         function atualizarListasGerenciamento() {
             const selectAlunos = document.getElementById('select-turma-aluno');
@@ -314,12 +407,11 @@
             const novaSenha = document.getElementById('input-senha-diretor').value.trim();
             if(novaSenha.length < 4) { alert("A senha deve ter pelo menos 4 caracteres."); return; }
             refConfig.child('senha_diretor').set(novaSenha).then(() => {
-                alert("Senha mestre do Diretor atualizada com sucesso!");
+                alert("Senha mestre do Diretor updated!");
                 document.getElementById('input-senha-diretor').value = '';
             });
         }
 
-        // --- Passo 1: Turma e Senha ---
         function criarTurmaESenha() {
             let nome = document.getElementById('input-nova-turma').value.trim().toUpperCase();
             let senha = document.getElementById('input-senha-turma').value.trim();
@@ -349,18 +441,16 @@
             if(dbConfig.turmas) {
                 Object.keys(dbConfig.turmas).forEach(t => {
                     let senhaDestaTurma = dbConfig.turmas[t].senhas ? dbConfig.turmas[t].senhas[0] : "Sem senha";
-                    ul.innerHTML += `<li><strong>${t}</strong> (Senha: ${senhaDestaTurma}) <button class="btn-remover" onclick="removerTurma('${t}')">Apagar</button></li>`;
+                    ul.innerHTML += `<li><span><strong>${t}</strong> (Senha: ${senhaDestaTurma})</span> <button class="btn-remover" onclick="removerTurma('${t}')">Apagar</button></li>`;
                 });
             }
         }
 
-        // --- Passo 2: Alunos e QR Code ---
         let refAlunosAdm = null;
         function carregarAlunosDaTurma() {
             const turma = document.getElementById('select-turma-aluno').value;
             if(!turma) return;
             
-            // Esconde a área de impressão ao mudar de turma
             document.getElementById('area-acoes-impressao').style.display = "none";
             
             if(refAlunosAdm) refAlunosAdm.off();
@@ -372,7 +462,7 @@
                 const alunos = snapshot.val() || {};
                 
                 if(Object.keys(alunos).length === 0) {
-                    ul.innerHTML = '<li style="color:#888;">Nenhum aluno cadastrado.</li>';
+                    ul.innerHTML = '<li style="color:#888; justify-content: center; padding: 15px;">Nenhum aluno cadastrado.</li>';
                 } else {
                     Object.keys(alunos).sort().forEach(nome => {
                         ul.innerHTML += `<li>${nome} <button class="btn-remover" onclick="removerAluno('${turma}', '${nome}')">Excluir</button></li>`;
@@ -381,7 +471,6 @@
             });
         }
 
-        // Função auxiliar para criar o bloco de layout de cada QR Code
         function gerarCartaoQR(nome, turma) {
             const divCartao = document.createElement('div');
             divCartao.className = 'cartao-qr';
@@ -395,7 +484,6 @@
             divImg.style.justifyContent = 'center';
             divCartao.appendChild(divImg);
 
-            // Renderiza o QR Code com a biblioteca
             new QRCode(divImg, {
                 text: nome,
                 width: 130,
@@ -407,7 +495,6 @@
             return divCartao;
         }
 
-        // Cadastro Individual e Impressão
         function cadastrarAlunoEGerarQR() {
             const turma = document.getElementById('select-turma-aluno').value;
             const nome = document.getElementById('input-novo-aluno').value.trim().toUpperCase();
@@ -423,18 +510,16 @@
                 const areaImprimir = document.getElementById('area-impressao');
                 
                 divAcoes.style.display = "block";
-                areaImprimir.innerHTML = ""; // Limpa a tela para mostrar apenas o recém-cadastrado
+                areaImprimir.innerHTML = ""; 
                 
                 areaImprimir.appendChild(gerarCartaoQR(nome, turma));
             });
         }
 
-        // Impressão Coletiva de toda a Turma
         function gerarImpressaoColetiva() {
             const turma = document.getElementById('select-turma-aluno').value;
             if(!turma) { alert("Selecione uma turma primeiro!"); return; }
 
-            // Puxa do banco de dados apenas 1 vez para gerar todos os cartões
             database.ref(`salas/${turma}/alunos`).once('value').then(snapshot => {
                 const alunos = snapshot.val() || {};
                 const nomes = Object.keys(alunos).sort();
@@ -448,9 +533,8 @@
                 const areaImprimir = document.getElementById('area-impressao');
                 
                 divAcoes.style.display = "block";
-                areaImprimir.innerHTML = ""; // Limpa a área
+                areaImprimir.innerHTML = ""; 
                 
-                // Percorre todos os alunos e gera os cartões
                 nomes.forEach(nome => {
                     areaImprimir.appendChild(gerarCartaoQR(nome, turma));
                 });
@@ -467,16 +551,16 @@
         // ==========================================
         // 4. MÓDULO DO DIRETOR (MONITORAMENTO)
         // ==========================================
+        function abrirDiretorMudarTurma() {
+            diretorMudarTurma();
+        }
+
         function iniciarModoDiretor() {
             const selectDiretor = document.getElementById('select-diretor-turma');
             selectDiretor.innerHTML = '';
             if(dbConfig.turmas) {
                 Object.keys(dbConfig.turmas).forEach(t => selectDiretor.add(new Option(t, t)));
             }
-            diretorMudarTurma();
-        }
-
-        function abrirDiretorMudarTurma() {
             diretorMudarTurma();
         }
 
@@ -499,7 +583,7 @@
             
             const alunosArr = Object.keys(dbAlunos).sort();
             if(alunosArr.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="color:#999;">Sem alunos registrados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="color:#94a3b8; padding: 20px;">Sem alunos registrados.</td></tr>';
                 return;
             }
 
@@ -507,13 +591,13 @@
                 const d = dbAlunos[aluno];
                 const linha = document.createElement('tr');
                 
-                let classeStatus = d.contador >= d.limite ? 'status-cheio' : 'status-ok';
+                let contagemHTML = d.contador >= d.limite ? `<span class="status-cheio">${d.contador} / ${d.limite}</span>` : `<span class="status-ok">${d.contador} / ${d.limite}</span>`;
                 
                 linha.innerHTML = `
                     <td style="text-align:left;"><strong>${aluno}</strong></td>
-                    <td class="${classeStatus}">${d.contador} / ${d.limite}</td>
-                    <td style="color:#555;">${d.hora1 || '-'}</td>
-                    <td style="color:#555;">${d.hora2 || '-'}</td>
+                    <td>${contagemHTML}</td>
+                    <td style="color:#64748b; font-weight: 500;">${d.hora1 || '-'}</td>
+                    <td style="color:#64748b; font-weight: 500;">${d.hora2 || '-'}</td>
                 `;
                 tbody.appendChild(linha);
             });
@@ -531,11 +615,11 @@
         }
 
         // ==========================================
-        // 5. MÓDULO DO PROFESSOR (CÂMERA E OPERAÇÃO)
+        // 5. MÓDULO DO PROFESSOR (CÂMERA, VIBRAÇÃO E COMANDO EDUCADOR)
         // ==========================================
         function iniciarModoProfessor(turma) {
             turmaAtual = turma;
-            document.getElementById('titulo-turma-prof').innerText = `Turma: ${turma}`;
+            document.getElementById('titulo-turma-prof').innerText = `🏫 Turma: ${turma}`;
             document.getElementById('mensagem').style.display = "none";
             
             if(refAlunosAtuais) refAlunosAtuais.off();
@@ -555,7 +639,7 @@
             const alunosArr = Object.keys(dbAlunos).sort();
 
             if(alunosArr.length === 0) {
-                ul.innerHTML = '<li style="text-align:center;">Turma vazia. Solicite cadastro à diretoria.</li>';
+                ul.innerHTML = '<li style="text-align:center; color: #64748b; padding: 15px;">Turma vazia. Solicite cadastro à diretoria.</li>';
                 return;
             }
 
@@ -564,19 +648,21 @@
                 const d = dbAlunos[aluno];
                 
                 let horas = "";
-                if (d.contador === 1) horas = `<br><small style="color:#666;">1ª: ${d.hora1}</small>`;
-                else if (d.contador === 2) horas = `<br><small style="color:#666;">1ª: ${d.hora1} | 2ª: ${d.hora2}</small>`;
+                if (d.contador === 1) horas = `<br><small style="color:#64748b; font-weight:500; margin-top:4px; display:inline-block;">1ª saída: ${d.hora1}</small>`;
+                else if (d.contador === 2) horas = `<br><small style="color:#64748b; font-weight:500; margin-top:4px; display:inline-block;">1ª: ${d.hora1} | 2ª: ${d.hora2}</small>`;
                 
-                li.innerHTML = `<strong>${aluno}</strong> <span style="float:right;">${d.contador}/${d.limite}</span>${horas}`;
+                li.innerHTML = `<div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                    <span style="flex:1;"><strong>${aluno}</strong></span>
+                                    <span style="font-weight:700;">${d.contador}/${d.limite}</span>
+                                </div>${horas}`;
                 if (d.contador >= d.limite) li.className = "limite-atingido";
                 ul.appendChild(li);
             });
         }
 
-        // --- Lógica do QR Code ---
         function iniciarCamera() {
             const configCamera = cameraTraseira ? { facingMode: "environment" } : { facingMode: "user" };
-            const configLeitor = { fps: 10, qrbox: { width: 250, height: 250 } };
+            const configLeitor = { fps: 12, qrbox: { width: 250, height: 250 } };
 
             if (html5QrCode) {
                 html5QrCode.stop().then(() => initInstancia(configCamera, configLeitor)).catch(e => console.log(e));
@@ -592,6 +678,7 @@
 
         function alternarCamera() { cameraTraseira = !cameraTraseira; iniciarCamera(); }
 
+        // Evento disparado na leitura de QR Codes
         function aoLerQrCode(texto) {
             const qrLido = texto.trim().toUpperCase();
 
@@ -602,6 +689,29 @@
 
             const msgDiv = document.getElementById('mensagem');
 
+            // --- NOVO COMANDO: QR CODE "EDUCADOR" PARA REINICIAR TURMA ---
+            if (qrLido === "EDUCADOR") {
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Vibração dupla longa
+
+                if (Object.keys(dbAlunos).length === 0) {
+                    msgDiv.innerHTML = "Comando EDUCADOR lido,<br>mas a turma não possui alunos.";
+                    msgDiv.className = "vermelho";
+                    return;
+                }
+
+                for (let aluno in dbAlunos) {
+                    dbAlunos[aluno].contador = 0;
+                    dbAlunos[aluno].hora1 = "";
+                    dbAlunos[aluno].hora2 = "";
+                }
+                
+                refAlunosAtuais.set(dbAlunos);
+                msgDiv.innerHTML = "🔄 <strong>Turma Reiniciada!</strong><br>Todas as contagens voltaram a zero.";
+                msgDiv.className = "verde";
+                return;
+            }
+
+            // --- Lógica Padrão de Alunos ---
             if (dbAlunos[qrLido]) {
                 if (dbAlunos[qrLido].contador < dbAlunos[qrLido].limite) {
                     dbAlunos[qrLido].contador++;
@@ -614,14 +724,20 @@
 
                     refAlunosAtuais.child(qrLido).set(dbAlunos[qrLido]);
 
-                    msgDiv.innerHTML = `${qrLido}<br>Saída Liberada (${dbAlunos[qrLido].contador}/2)<br>⏰ ${horaAtual}`;
+                    if (navigator.vibrate) navigator.vibrate(100); // Vibração curta de sucesso
+
+                    msgDiv.innerHTML = `✅ <strong>${qrLido}</strong><br>Saída Liberada (${dbAlunos[qrLido].contador}/2)<br>⏰ Horário: ${horaAtual}`;
                     msgDiv.className = "verde";
                 } else {
-                    msgDiv.innerHTML = `${qrLido}<br>Saída Negada!<br>Limite atingido.`;
+                    if (navigator.vibrate) navigator.vibrate([150, 100, 150]); // Vibração dupla de erro
+
+                    msgDiv.innerHTML = `❌ <strong>${qrLido}</strong><br>Saída Negada!<br>O limite de saídas foi atingido.`;
                     msgDiv.className = "vermelho";
                 }
             } else {
-                msgDiv.innerHTML = `Atenção: "${qrLido}"<br>Não pertence à turma ${turmaAtual}.`;
+                if (navigator.vibrate) navigator.vibrate([150, 100, 150]); // Vibração dupla de erro
+                
+                msgDiv.innerHTML = `⚠️ <strong>Atenção:</strong> "${qrLido}"<br>Não pertence à turma ${turmaAtual}.`;
                 msgDiv.className = "vermelho";
             }
         }
