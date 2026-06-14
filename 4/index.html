@@ -310,7 +310,7 @@
         <div class="card">
             <h3>📚 Passo 1: Criar Turma e Senha</h3>
             <div class="linha-form">
-                <input type="text" id="input-nova-turma" placeholder="Nome (Ex: 1_ANO)">
+                <input type="text" id="input-nova-turma" placeholder="Nome (Ex: 1 ANO)">
                 <input type="text" id="input-senha-turma" placeholder="Senha da turma">
                 <button onclick="criarTurmaESenha()">Criar</button>
             </div>
@@ -420,7 +420,7 @@
             } else {
                 dbConfig = {
                     senha_diretor: "diretor123",
-                    turmas: { "1_ANO": { senhas: ["senha1"] } }
+                    turmas: { "1 ANO": { senhas: ["senha1"] } }
                 };
                 refConfig.set(dbConfig);
             }
@@ -525,11 +525,11 @@
         }
 
         function criarTurmaESenha() {
+            // AQUI FOI REMOVIDO O COMANDO QUE TROCAVA ESPAÇO POR UNDERLINE
             let nome = document.getElementById('input-nova-turma').value.trim().toUpperCase();
             let senha = document.getElementById('input-senha-turma').value.trim();
             
             if(!nome || !senha) { alert("Preencha o nome da turma E a senha do professor!"); return; }
-            nome = nome.replace(/ /g, "_"); 
             
             if(dbConfig.turmas && dbConfig.turmas[nome]) { alert("Esta turma já existe!"); return; }
             
