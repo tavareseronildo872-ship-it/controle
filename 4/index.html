@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Escolar - Controle de Saídas</title>
     
+    <!-- Fonte Moderna do Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Bibliotecas Necessárias -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -209,7 +211,7 @@
             transition: transform 0.2s;
         }
         .lista-itens li:hover { transform: scale(1.01); border-color: #cbd5e1; }
-        .btn-remover { background-color: #fee2e2; color: var(--danger); font-size: 12px; padding: 6px 12px; }
+        .btn-remover { background-color: #fee2e2; color: var(--danger); font-size: 12px; padding: 6px 12px; border-radius: 6px; }
         .btn-remover:hover { background-color: var(--danger); color: var(--white); box-shadow: none; }
 
         /* --- TABELAS (DIRETOR) --- */
@@ -232,7 +234,7 @@
         }
         #reader { width: 100%; border-radius: var(--radius-md); overflow: hidden; border: none !important; }
         #reader video { object-fit: cover; border-radius: var(--radius-md); }
-        #reader img { display: none !important; } /* Esconde logo padrão do html5-qrcode */
+        #reader img { display: none !important; } 
         .btn-camera { width: 100%; margin-top: 15px; background: #64748b; font-size: 15px; }
         .btn-camera:hover { background: #475569; }
         
@@ -282,6 +284,7 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN -->
     <div id="tela-login" class="tela">
         <h2>Bem-vindo</h2>
         <div id="status-conexao">
@@ -292,10 +295,11 @@
         <button id="btn-entrar" onclick="fazerLogin()" disabled>Acessar Sistema</button>
         
         <div style="margin-top: 35px; font-size: 11px; color: var(--text-muted); line-height: 1.5; text-align: center; font-weight: 400;">
-            Desenvolvido por <strong>Eronildo Tavares</strong> &copy; 2026.<br>Plataforma de uso gratuito para apoio à gestão escolar.
+            Desenvolvido por <strong>ERONTECH</strong> &copy; 2026.<br>Plataforma de uso gratuito para apoio à gestão escolar.
         </div>
     </div>
 
+    <!-- TELA GERENCIAMENTO (ADM) -->
     <div id="tela-gerenciamento" class="tela">
         <div class="topo-barra" style="background: var(--grad-adm);">
             <h2>⚙️ Painel de Administração</h2>
@@ -334,6 +338,11 @@
             </button>
 
             <ul class="lista-itens" id="lista-adm-alunos"></ul>
+            
+            <!-- Botão de exclusão múltipla de alunos -->
+            <button id="btn-remover-selecionados" onclick="removerAlunosSelecionados()" style="width:100%; background: var(--danger); margin-top: 15px; display: none;">
+                🗑️ Remover Alunos Selecionados
+            </button>
 
             <div id="area-acoes-impressao" style="display:none; margin-top:25px; padding: 20px; border: 1px solid var(--border-color); background: #f8fafc; border-radius: var(--radius-md);">
                 <button class="btn-imprimir" onclick="window.print()" style="background: var(--teal); width: 100%; margin-bottom: 20px; padding: 16px; font-size: 16px;">🖨️ Imprimir Cartões Gerados</button>
@@ -342,6 +351,7 @@
         </div>
     </div>
 
+    <!-- TELA DIRETOR -->
     <div id="tela-diretor" class="tela">
         <div class="topo-barra" style="background: var(--grad-dir);">
             <h2>📊 Painel da Diretoria</h2>
@@ -371,6 +381,7 @@
         </button>
     </div>
 
+    <!-- TELA PROFESSOR -->
     <div id="tela-professor" class="tela">
         <div class="topo-barra" style="background: var(--grad-prof);">
             <h2 id="titulo-turma-prof">🏫 Turma</h2>
@@ -411,6 +422,7 @@
         let dbAlunos = {};   
         let refConfig = database.ref('config');
         let refAlunosAtuais = null;
+        let refAlunosAdm = null;
         let turmaAtual = null; 
         
         let html5QrCode = null;
@@ -424,7 +436,7 @@
             } else {
                 dbConfig = {
                     senha_diretor: "diretor123",
-                    turmas: { "1 ANO": { senhas: ["senha1"] } }
+                    turmas: {}
                 };
                 refConfig.set(dbConfig);
             }
@@ -432,15 +444,20 @@
             // Atualiza UI de Login
             const dot = document.getElementById('dot-conexao');
             const texto = document.getElementById('texto-conexao');
-            dot.classList.add('online');
-            texto.innerText = "Sistema Online e Pronto";
-            texto.style.color = "var(--success)";
+            if (dot && texto) {
+                dot.classList.add('online');
+                texto.innerText = "Sistema Online e Pronto";
+                texto.style.color = "var(--success)";
+            }
             
-            document.getElementById('input-login').disabled = false;
-            document.getElementById('btn-entrar').disabled = false;
+            if (document.getElementById('input-login')) document.getElementById('input-login').disabled = false;
+            if (document.getElementById('btn-entrar')) document.getElementById('btn-entrar').disabled = false;
 
-            if(document.getElementById('tela-gerenciamento').style.display === 'block') {
-                atualizarListasGerenciamento();
+            // Mantém as listas sincronizadas em tempo real
+            atualizarListasGerenciamento();
+            
+            if (document.getElementById('tela-diretor').style.display === 'block') {
+                atualizarSelectDiretor();
             }
         });
 
@@ -489,31 +506,35 @@
             document.querySelectorAll('.tela').forEach(t => t.style.display = "none");
             document.getElementById(idTela).style.display = "block";
             if (idTela !== "tela-professor" && html5QrCode) {
-                html5QrCode.stop().catch(e => console.log("Câmera já parada."));
+                html5QrCode.stop().catch(e => console.log("Câmera parada."));
             }
         }
 
         function fazerLogout() {
             document.getElementById("input-login").value = "";
             if (refAlunosAtuais) refAlunosAtuais.off(); 
+            if (refAlunosAdm) refAlunosAdm.off();
             abrirTela("tela-login");
         }
 
         // ==========================================
-        // 3. MÓDULO DE GERENCIAMENTO (ADM)
+        // 3. MÓDULO DE GERENCIAMENTO (ADM) - CORRIGIDO
         // ==========================================
         function atualizarListasGerenciamento() {
             const selectAlunos = document.getElementById('select-turma-aluno');
-            const valorAtualAlunos = selectAlunos.value;
+            if (!selectAlunos) return;
 
+            const valorAtualAlunos = selectAlunos.value;
             selectAlunos.innerHTML = '';
             
-            const listaTurmas = dbConfig.turmas ? Object.keys(dbConfig.turmas) : [];
+            const listaTurmas = dbConfig && dbConfig.turmas ? Object.keys(dbConfig.turmas) : [];
             listaTurmas.forEach(t => {
                 selectAlunos.add(new Option(t, t));
             });
 
-            if(valorAtualAlunos && listaTurmas.includes(valorAtualAlunos)) selectAlunos.value = valorAtualAlunos;
+            if(valorAtualAlunos && listaTurmas.includes(valorAtualAlunos)) {
+                selectAlunos.value = valorAtualAlunos;
+            }
 
             carregarListaTurmasAdm();
             carregarAlunosDaTurma();
@@ -523,7 +544,7 @@
             const novaSenha = document.getElementById('input-senha-diretor').value.trim();
             if(novaSenha.length < 4) { alert("A senha deve ter pelo menos 4 caracteres."); return; }
             refConfig.child('senha_diretor').set(novaSenha).then(() => {
-                alert("Senha mestre do Diretor updated!");
+                alert("Senha mestre do Diretor atualizada!");
                 document.getElementById('input-senha-diretor').value = '';
             });
         }
@@ -533,55 +554,150 @@
             let senha = document.getElementById('input-senha-turma').value.trim();
             
             if(!nome || !senha) { alert("Preencha o nome da turma E a senha do professor!"); return; }
-            
             if(dbConfig.turmas && dbConfig.turmas[nome]) { alert("Esta turma já existe!"); return; }
             
-            refConfig.child(`turmas/${nome}`).set({ senhas: [senha] }).then(() => {
+            refConfig.child('turmas').child(nome).set({ senhas: [senha] }).then(() => {
                 document.getElementById('input-nova-turma').value = "";
                 document.getElementById('input-senha-turma').value = "";
             });
         }
 
+        // REMOVE DO BANCO DE FORMA SEGURA SEM QUEBRAR POR CARACTERES ESPECIAIS
         function removerTurma(nome) {
-            if(confirm(`Tem certeza? A turma ${nome} será excluída.`)) {
-                refConfig.child(`turmas/${nome}`).remove();
+            if(confirm(`Tem certeza? A turma "${nome}" e TODOS os seus alunos serão excluídos permanentemente.`)) {
+                refConfig.child('turmas').child(nome).remove();
+                database.ref('salas').child(nome).remove(); 
                 document.getElementById('area-acoes-impressao').style.display = "none";
             }
         }
 
+        // COMPORTAMENTO DINÂMICO DOS BOTÕES (EVITA BUG COM ASPAS OU ESPAÇOS)
         function carregarListaTurmasAdm() {
             const ul = document.getElementById('lista-adm-turmas');
+            if(!ul) return;
             ul.innerHTML = '';
-            if(dbConfig.turmas) {
+            
+            if(dbConfig && dbConfig.turmas) {
                 Object.keys(dbConfig.turmas).forEach(t => {
                     let senhaDestaTurma = dbConfig.turmas[t].senhas ? dbConfig.turmas[t].senhas[0] : "Sem senha";
-                    ul.innerHTML += `<li><span><strong>${t}</strong> <small style="color:var(--text-muted); margin-left:8px;">(Senha: ${senhaDestaTurma})</small></span> <button class="btn-remover" onclick="removerTurma('${t}')">Apagar</button></li>`;
+                    
+                    const li = document.createElement('li');
+                    const span = document.createElement('span');
+                    span.innerHTML = `<strong>${t}</strong> <small style="color:var(--text-muted); margin-left:8px;">(Senha: ${senhaDestaTurma})</small>`;
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-remover';
+                    btn.innerText = 'Apagar';
+                    btn.onclick = function() { removerTurma(t); };
+                    
+                    li.appendChild(span);
+                    li.appendChild(btn);
+                    ul.appendChild(li);
                 });
             }
         }
 
-        let refAlunosAdm = null;
         function carregarAlunosDaTurma() {
             const turma = document.getElementById('select-turma-aluno').value;
-            if(!turma) return;
+            const ul = document.getElementById('lista-adm-alunos');
+            if(!ul) return;
             
-            document.getElementById('area-acoes-impressao').style.display = "none";
+            ul.innerHTML = '';
+            const btnRemoverSel = document.getElementById('btn-remover-selecionados');
+            if (btnRemoverSel) btnRemoverSel.style.display = 'none';
+
+            if(!turma) {
+                ul.innerHTML = '<li style="justify-content:center; color:var(--text-muted); border:none; background:transparent;">Nenhuma turma selecionada.</li>';
+                return;
+            }
             
             if(refAlunosAdm) refAlunosAdm.off();
-            refAlunosAdm = database.ref(`salas/${turma}/alunos`);
+            refAlunosAdm = database.ref('salas').child(turma).child('alunos');
             
             refAlunosAdm.on('value', (snapshot) => {
-                const ul = document.getElementById('lista-adm-alunos');
                 ul.innerHTML = '';
+                if (btnRemoverSel) btnRemoverSel.style.display = 'none';
+
                 const alunos = snapshot.val() || {};
+                const chavesAlunos = Object.keys(alunos);
                 
-                if(Object.keys(alunos).length === 0) {
+                if(chavesAlunos.length === 0) {
                     ul.innerHTML = '<li style="justify-content:center; color:var(--text-muted); border:none; background:transparent;">Nenhum aluno cadastrado.</li>';
                 } else {
-                    Object.keys(alunos).sort().forEach(nome => {
-                        ul.innerHTML += `<li>${nome} <button class="btn-remover" onclick="removerAluno('${turma}', '${nome}')">Excluir</button></li>`;
+                    chavesAlunos.sort().forEach(nome => {
+                        const li = document.createElement('li');
+                        
+                        const label = document.createElement('label');
+                        label.style.cssText = "display:flex; align-items:center; gap:10px; cursor:pointer; flex:1; margin:0;";
+                        
+                        const chk = document.createElement('input');
+                        chk.type = 'checkbox';
+                        chk.className = 'chk-aluno';
+                        chk.value = nome;
+                        chk.style.cssText = "width:18px !important; min-width:18px !important; height:18px !important; padding:0 !important; margin:0 !important; cursor:pointer; box-shadow:none;";
+                        chk.onchange = verificarSelecaoAlunos;
+                        
+                        const spanNome = document.createElement('span');
+                        spanNome.innerText = nome;
+                        
+                        label.appendChild(chk);
+                        label.appendChild(spanNome);
+                        
+                        const btnExcluir = document.createElement('button');
+                        btnExcluir.className = 'btn-remover';
+                        btnExcluir.innerText = 'Excluir';
+                        btnExcluir.onclick = function() { removerAluno(turma, nome); };
+                        
+                        li.appendChild(label);
+                        li.appendChild(btnExcluir);
+                        ul.appendChild(li);
                     });
                 }
+            });
+        }
+
+        function verificarSelecaoAlunos() {
+            const selecionados = document.querySelectorAll('.chk-aluno:checked').length;
+            document.getElementById('btn-remover-selecionados').style.display = selecionados > 0 ? 'block' : 'none';
+        }
+
+        function removerAlunosSelecionados() {
+            const turma = document.getElementById('select-turma-aluno').value;
+            const checkboxes = document.querySelectorAll('.chk-aluno:checked');
+            if(checkboxes.length === 0 || !turma) return;
+
+            if(confirm(`Tem certeza que deseja excluir os ${checkboxes.length} aluno(s) selecionado(s)?`)) {
+                checkboxes.forEach(chk => {
+                    database.ref('salas').child(turma).child('alunos').child(chk.value).remove();
+                });
+                document.getElementById('area-acoes-impressao').style.display = "none";
+            }
+        }
+
+        function removerAluno(turma, nome) {
+            if(confirm(`Remover aluno "${nome}"?`)) {
+                database.ref('salas').child(turma).child('alunos').child(nome).remove();
+                document.getElementById('area-acoes-impressao').style.display = "none";
+            }
+        }
+
+        function cadastrarAlunoEGerarQR() {
+            const turma = document.getElementById('select-turma-aluno').value;
+            const nome = document.getElementById('input-novo-aluno').value.trim().toUpperCase();
+            
+            if(!turma || !nome) { alert("Selecione uma turma e digite o nome!"); return; }
+            
+            database.ref('salas').child(turma).child('alunos').child(nome).set({
+                limite: 2, contador: 0, hora1: "", hora2: ""
+            }).then(() => {
+                document.getElementById('input-novo-aluno').value = "";
+                
+                const divAcoes = document.getElementById('area-acoes-impressao');
+                const areaImprimir = document.getElementById('area-impressao');
+                
+                divAcoes.style.display = "block";
+                areaImprimir.innerHTML = ""; 
+                areaImprimir.appendChild(gerarCartaoQR(nome, turma));
             });
         }
 
@@ -610,31 +726,11 @@
             return divCartao;
         }
 
-        function cadastrarAlunoEGerarQR() {
-            const turma = document.getElementById('select-turma-aluno').value;
-            const nome = document.getElementById('input-novo-aluno').value.trim().toUpperCase();
-            
-            if(!turma || !nome) { alert("Selecione uma turma e digite o nome!"); return; }
-            
-            database.ref(`salas/${turma}/alunos/${nome}`).set({
-                limite: 2, contador: 0, hora1: "", hora2: ""
-            }).then(() => {
-                document.getElementById('input-novo-aluno').value = "";
-                
-                const divAcoes = document.getElementById('area-acoes-impressao');
-                const areaImprimir = document.getElementById('area-impressao');
-                
-                divAcoes.style.display = "block";
-                areaImprimir.innerHTML = ""; 
-                areaImprimir.appendChild(gerarCartaoQR(nome, turma));
-            });
-        }
-
         function gerarImpressaoColetiva() {
             const turma = document.getElementById('select-turma-aluno').value;
             if(!turma) return;
 
-            database.ref(`salas/${turma}/alunos`).once('value').then(snapshot => {
+            database.ref('salas').child(turma).child('alunos').once('value').then(snapshot => {
                 const alunos = snapshot.val() || {};
                 const nomes = Object.keys(alunos).sort();
                 
@@ -652,31 +748,37 @@
             });
         }
 
-        function removerAluno(turma, nome) {
-            if(confirm(`Remover aluno ${nome}?`)) {
-                database.ref(`salas/${turma}/alunos/${nome}`).remove();
-                document.getElementById('area-acoes-impressao').style.display = "none";
-            }
-        }
-
         // ==========================================
         // 4. MÓDULO DO DIRETOR
         // ==========================================
         function iniciarModoDiretor() {
+            atualizarSelectDiretor();
+        }
+
+        function atualizarSelectDiretor() {
             const selectDiretor = document.getElementById('select-diretor-turma');
+            if (!selectDiretor) return;
+            const valorAtual = selectDiretor.value;
             selectDiretor.innerHTML = '';
-            if(dbConfig.turmas) {
+            if(dbConfig && dbConfig.turmas) {
                 Object.keys(dbConfig.turmas).forEach(t => selectDiretor.add(new Option(t, t)));
             }
-            diretorMudarTurma();
+            if (valorAtual && dbConfig.turmas && dbConfig.turmas[valorAtual]) {
+                selectDiretor.value = valorAtual;
+            } else {
+                diretorMudarTurma();
+            }
         }
 
         function diretorMudarTurma() {
             turmaAtual = document.getElementById('select-diretor-turma').value;
-            if(!turmaAtual) return;
+            if(!turmaAtual) {
+                document.getElementById('tabela-diretor-corpo').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Nenhuma turma selecionada.</td></tr>';
+                return;
+            }
 
             if(refAlunosAtuais) refAlunosAtuais.off();
-            refAlunosAtuais = database.ref(`salas/${turmaAtual}/alunos`);
+            refAlunosAtuais = database.ref('salas').child(turmaAtual).child('alunos');
             
             refAlunosAtuais.on('value', (snapshot) => {
                 dbAlunos = snapshot.val() || {};
@@ -686,11 +788,12 @@
 
         function renderizarTabelaDiretor() {
             const tbody = document.getElementById('tabela-diretor-corpo');
+            if(!tbody) return;
             tbody.innerHTML = '';
             
             const alunosArr = Object.keys(dbAlunos).sort();
             if(alunosArr.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Sem alunos.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Sem alunos nesta turma.</td></tr>';
                 return;
             }
 
@@ -713,6 +816,7 @@
         }
 
         function zerarTurmaDiretor() {
+            if(!turmaAtual) return;
             if(confirm(`Zerar a contagem de TODOS os alunos da turma ${turmaAtual}?`)) {
                 for (let aluno in dbAlunos) {
                     dbAlunos[aluno].contador = 0;
@@ -732,7 +836,7 @@
             document.getElementById('mensagem').style.display = "none";
             
             if(refAlunosAtuais) refAlunosAtuais.off();
-            refAlunosAtuais = database.ref(`salas/${turmaAtual}/alunos`);
+            refAlunosAtuais = database.ref('salas').child(turmaAtual).child('alunos');
             
             refAlunosAtuais.on('value', (snapshot) => {
                 dbAlunos = snapshot.val() || {};
@@ -744,6 +848,7 @@
 
         function renderizarListaProfessor() {
             const ul = document.getElementById('lista-prof-alunos');
+            if(!ul) return;
             ul.innerHTML = '';
             const alunosArr = Object.keys(dbAlunos).sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
@@ -838,12 +943,12 @@
 
                     refAlunosAtuais.child(qrLido).set(dbAlunos[qrLido]);
 
-                    if (navigator.vibrate) navigator.vibrate(100); // Vibração curta de sucesso
+                    if (navigator.vibrate) navigator.vibrate(100); 
 
                     msgDiv.innerHTML = `✅ <strong>${qrLido}</strong><br>Saída Liberada (${dbAlunos[qrLido].contador}/2)<br>⏰ Horário: ${horaAtual}`;
                     msgDiv.className = "verde";
                 } else {
-                    if (navigator.vibrate) navigator.vibrate([150, 100, 150]); // Vibração de erro
+                    if (navigator.vibrate) navigator.vibrate([150, 100, 150]); 
 
                     msgDiv.innerHTML = `❌ <strong>${qrLido}</strong><br>Saída Negada! Limite atingido.`;
                     msgDiv.className = "vermelho";
