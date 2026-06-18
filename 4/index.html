@@ -777,9 +777,9 @@
             divImg.style.borderRadius = "8px";
             divCartao.appendChild(divImg);
 
-            // CODIFICAÇÃO FORTE APLICADA AQUI (O QR é gerado em ASCII puro)
+            // CORREÇÃO DEFINITIVA: Convertendo para Bytes UTF-8 ao gerar, mantendo o QR Code "limpo" para a câmera.
             new QRCode(divImg, {
-                text: encodeURIComponent(nome), 
+                text: unescape(encodeURIComponent(nome)), 
                 width: 120,
                 height: 120,
                 colorDark : "#1e293b",
@@ -964,17 +964,15 @@
         function alternarCamera() { cameraTraseira = !cameraTraseira; iniciarCamera(); }
 
         function aoLerQrCode(texto) {
-            // DECODIFICAÇÃO FORTE APLICADA AQUI
+            // CORREÇÃO DEFINITIVA NA LEITURA (Decodificador Dinâmico)
             let qrDecodificado = texto;
             try {
-                // Tenta decodificar o novo formato (ASCII puro) ou o formato antigo como fallback
-                if (texto.includes('%')) {
-                    qrDecodificado = decodeURIComponent(texto);
-                } else {
-                    qrDecodificado = decodeURIComponent(escape(texto));
-                }
+                // Tenta salvar o texto se a câmera não conseguiu montar os bytes sozinha
+                let corrigido = decodeURIComponent(escape(texto));
+                if(corrigido) qrDecodificado = corrigido;
             } catch(e) {
-                console.error("Erro na decodificação", e);
+                // Se der erro, significa que a câmera já entregou o nome perfeito e não precisamos fazer nada!
+                qrDecodificado = texto;
             }
 
             const qrLido = qrDecodificado.trim().toUpperCase();
