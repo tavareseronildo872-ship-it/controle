@@ -11,6 +11,7 @@
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Script adicionado exclusivamente para o download do cartão em PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -630,7 +631,7 @@
             const novaSenha = document.getElementById('input-senha-diretor').value.trim();
             if(novaSenha.length < 4) { alert("A senha deve ter pelo menos 4 caracteres."); return; }
             refConfig.child('senha_diretor').set(novaSenha).then(() => {
-                alert("Senha mestre do Diretor updated!");
+                alert("Senha mestre do Diretor atualizada!");
                 document.getElementById('input-senha-diretor').value = '';
             });
         }
@@ -764,19 +765,23 @@
         }
 
         // ==========================================
-        // NOVA LÓGICA DE CRIAÇÃO DO QR CODE (COM DOWNLOAD AUTOMÁTICO EM PNG)
+        // NOVA LÓGICA DE CRIAÇÃO DO QR CODE (MUDANÇA EXCLUSIVA)
         // ==========================================
         function adicionarCartaoNaTela(nome, turma) {
             const areaImprimir = document.getElementById('area-impressao');
             
             const divCartao = document.createElement('div');
             divCartao.className = 'cartao-qr';
-            divCartao.style.cursor = 'pointer'; 
-            divCartao.setAttribute('title', 'Clique para baixar este cartão em PNG');
+            divCartao.style.cursor = 'pointer';
             
-            // Evento modificado para realizar o download automático ao tocar/clicar no cartão
+            // Ao clicar ou tocar no cartão, converte o bloco HTML em uma imagem PNG e realiza o download
             divCartao.onclick = function() {
-                baixarCartaoComoPNG(divCartao, nome, turma);
+                html2canvas(divCartao, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `QR_${nome.replace(/\s+/g, '_')}_${turma.replace(/\s+/g, '_')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }).catch(e => console.error("Erro ao gerar o download do PNG:", e));
             };
             
             const h3 = document.createElement('h3');
@@ -806,26 +811,6 @@
                     console.error("Falha ao gerar o QR de " + nome, e);
                 }
             }, 50);
-        }
-
-        // Função responsável por converter o cartão em PNG de alta definição e baixá-lo
-        function baixarCartaoComoPNG(elemento, nomeAluno, turmaAluno) {
-            const opcoes = {
-                scale: 2, 
-                backgroundColor: "#ffffff",
-                useCORS: true
-            };
-
-            html2canvas(elemento, opcoes).then(canvas => {
-                const link = document.createElement('a');
-                // Salva o arquivo com o nome formatado do aluno e sua respectiva turma
-                const nomeArquivo = `QR_${nomeAluno.replace(/\s+/g, '_')}_${turmaAluno.replace(/\s+/g, '_')}.png`;
-                link.download = nomeArquivo;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }).catch(err => {
-                console.error("Falha ao exportar cartão como PNG", err);
-            });
         }
 
         function cadastrarAlunoEGerarQR() {
@@ -1056,7 +1041,7 @@
                 
                 refAlunosAtuais.set(dbAlunos);
                 ultimoScanGlobal = 0; 
-                textosScansAlunos = {}; 
+                ultimosScansAlunos = {}; 
                 
                 msgDiv.innerHTML = "🔄 <strong>Turma Reiniciada!</strong><br>As contagens e os tempos voltaram a zero.";
                 msgDiv.className = "verde";
