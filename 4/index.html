@@ -11,6 +11,7 @@
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Script adicionado exclusivamente para viabilizar o download do bloco em PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -290,7 +291,7 @@
         .verde { color: #065f46; background-color: #d1fae5; border: 1px solid #a7f3d0; display: block !important; }
         .vermelho { color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5; display: block !important; }
 
-        /* --- IMPRESSÃO QR CODE NO NAVEGADOR --- */
+        /* --- IMPRESSÃO QR CODE --- */
         #area-impressao { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
         .cartao-qr { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -312,14 +313,14 @@
             .topo-barra { padding-left: 75px; }
         }
 
-        /* --- MODO IMPRESSÃO CORRIGIDO (4 COLUNAS X 5 LINHAS) --- */
+        /* --- MODO IMPRESSÃO CORRIGIDO (4x5 em A4) --- */
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 10mm; /* Margem segura padrão da folha A4 */
+                margin: 10mm; /* Define margens precisas para garantir alinhamento */
             }
 
-            .fundo-midia, .overlay-fundo, .logo-escola, .topo-barra { display: none !important; }
+            .fundo-midia, .overlay-fundo, .logo-escola, .topo-barra, .btn-imprimir { display: none !important; }
             body { background: white !important; margin: 0; padding: 0; min-height: auto; }
             .tela { display: none !important; }
             
@@ -347,29 +348,28 @@
                 background: transparent !important; padding: 0 !important; margin: 0 !important;
             }
 
-            .btn-imprimir { display: none !important; } /* Oculta o botão imprimir na folha */
-
-            /* Criação do Grid Exato de Impressão */
+            /* Configuração do Grid para exatamente 4 colunas */
             #area-impressao { 
                 display: grid !important; 
-                grid-template-columns: repeat(4, 1fr) !important; /* Exatamente 4 por linha */
+                grid-template-columns: repeat(4, 1fr) !important; 
                 gap: 5mm !important; /* Espaço entre os cartões */
+                justify-items: center !important; 
+                align-items: start !important;
                 width: 100% !important; 
-                margin: 0 !important;
-                padding: 0 !important;
             }
 
+            /* Dimensões precisas em mm para que 5 filas caibam em 297mm (Altura do A4) */
             .cartao-qr { 
                 border: 1px dashed #000 !important; 
-                padding: 5mm !important; 
+                padding: 4mm !important; 
                 margin: 0 !important; 
                 page-break-inside: avoid !important; 
                 background: white !important; 
                 border-radius: 0 !important; 
                 box-shadow: none !important; 
                 transform: none !important; 
-                width: 100% !important;
-                height: 52mm !important; /* Altura controlada para caber exatas 5 linhas na folha A4 */
+                width: 44mm !important; 
+                height: 53mm !important; 
                 display: flex !important; 
                 flex-direction: column !important; 
                 align-items: center !important;
@@ -378,20 +378,19 @@
             }
 
             .cartao-qr h3 {
-                display: block !important; color: #000 !important; 
-                font-size: 11px !important; /* Ajustado para não cortar na folha */
-                margin: 0 0 5px 0 !important; text-align: center !important;
+                display: block !important; 
+                color: #000 !important; 
+                font-size: 11px !important;
+                margin: 0 0 4px 0 !important; 
+                text-align: center !important;
                 line-height: 1.2 !important;
-            }
-
-            .cartao-qr div {
-                padding: 0 !important; /* Remove preenchimento extra da div do QR */
+                word-wrap: break-word !important;
+                max-width: 100% !important;
             }
 
             .cartao-qr img, .cartao-qr canvas {
                 display: block !important; 
-                max-width: 85px !important; /* Trava o tamanho do QR code na impressão */
-                max-height: 85px !important;
+                max-width: 32mm !important; 
                 height: auto !important;
             }
         }
@@ -636,7 +635,7 @@
         }
 
         // ==========================================
-        // 3. MÓDULO DE GERENCIAMENTO (ADM) 
+        // 3. MÓDULO DE GERENCIAMENTO (ADM) - CORRIGIDO
         // ==========================================
         function atualizarListasGerenciamento() {
             const selectAlunos = document.getElementById('select-turma-aluno');
@@ -794,23 +793,18 @@
         }
 
         // ==========================================
-        // NOVA LÓGICA DE CRIAÇÃO DO QR CODE (COM DOWNLOAD)
+        // NOVA LÓGICA DE CRIAÇÃO DO QR CODE (COM DOWNLOAD PNG POR CLIQUE)
         // ==========================================
         function adicionarCartaoNaTela(nome, turma) {
             const areaImprimir = document.getElementById('area-impressao');
             
             const divCartao = document.createElement('div');
             divCartao.className = 'cartao-qr';
-            divCartao.style.cursor = 'pointer';
+            divCartao.style.cursor = 'pointer'; 
             
-            // Ao clicar ou tocar no cartão, converte o bloco HTML em uma imagem PNG e realiza o download
+            // Evento configurado para que o clique dispare o download do cartão em PNG
             divCartao.onclick = function() {
-                html2canvas(divCartao, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `QR_${nome.replace(/\s+/g, '_')}_${turma.replace(/\s+/g, '_')}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                }).catch(e => console.error("Erro ao gerar o download do PNG:", e));
+                baixarCartaoComoPNG(divCartao, nome, turma);
             };
             
             const h3 = document.createElement('h3');
@@ -819,8 +813,8 @@
 
             const divImg = document.createElement('div');
             divImg.style.background = "#fff";
-            divImg.style.padding = "5px";
-            divImg.style.borderRadius = "8px";
+            divImg.style.padding = "2px";
+            divImg.style.borderRadius = "4px";
             divCartao.appendChild(divImg);
             
             // 1º PASSO: Adiciona fisicamente a div na tela para que o navegador calcule a largura dela
@@ -840,6 +834,25 @@
                     console.error("Falha ao gerar o QR de " + nome, e);
                 }
             }, 50);
+        }
+
+        // Função responsável por converter o elemento HTML em uma imagem de alta definição (PNG)
+        function baixarCartaoComoPNG(elemento, nomeAluno, turmaAluno) {
+            const opcoes = {
+                scale: 3, 
+                backgroundColor: "#ffffff",
+                useCORS: true
+            };
+
+            html2canvas(elemento, opcoes).then(canvas => {
+                const link = document.createElement('a');
+                const nomeArquivo = `QR_${nomeAluno.replace(/\s+/g, '_')}_${turmaAluno.replace(/\s+/g, '_')}.png`;
+                link.download = nomeArquivo;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error("Erro ao converter e baixar cartão em PNG", err);
+            });
         }
 
         function cadastrarAlunoEGerarQR() {
@@ -1030,11 +1043,6 @@
             } else {
                 initInstancia(configCamera, configLeitor);
             }
-        }
-
-        function initInstancia(configCamera, configLeitor) {
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(configCamera, configLeitor, aoLerQrCode, () => {}).catch(() => alert("Erro ao acessar a câmera."));
         }
 
         function alternarCamera() { cameraTraseira = !cameraTraseira; iniciarCamera(); }
