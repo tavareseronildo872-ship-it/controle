@@ -13,26 +13,76 @@
     .letra-gigante{font-size:5.5rem;font-weight:900;line-height:1}
     .tela{display:none}
     .tela.ativa{display:block}
+
+    /* ✨ FUNDO PERSONALIZADO NA TELA INICIAL */
+    #fundo-inicio{
+        position:fixed; inset:0; z-index:-2;
+        background-size:cover;
+        background-position:center;
+        background-repeat:no-repeat;
+        background-attachment:fixed;
+        transition:opacity .5s ease;
+    }
+    /* Camada escura para texto ficar legível em qualquer imagem */
+    #camada-escura{
+        position:fixed; inset:0; z-index:-1;
+        background: linear-gradient(135deg, rgba(88,28,135,.78), rgba(219,39,119,.72), rgba(251,146,60,.68));
+    }
+    /* Fundo normal nas outras telas */
+    .tela:not(#t1) ~ #fundo-inicio, .tela:not(#t1) ~ #camada-escura{ display:none; }
+    body.tela-ativa-inicio{ background:transparent !important; }
 </style>
 </head>
 <body class="bg-gradient-to-br from-purple-700 via-pink-500 to-orange-400 min-h-screen text-white">
 
+<!-- ✨ ELEMENTOS DO FUNDO -->
+<div id="fundo-inicio"></div>
+<div id="camada-escura"></div>
+
 <div class="container mx-auto px-4 py-5 max-w-md">
 
-    <!-- TELA 1 - INÍCIO -->
+    <!-- TELA 1 - INÍCIO ✅ AGORA COM OPÇÃO DE IMAGEM -->
     <div id="t1" class="tela ativa">
         <h1 class="text-4xl font-black text-center mb-1 drop-shadow-lg">🎮 ADEDONHA</h1>
-        <p class="text-center mb-10 opacity-90 text-sm">Jogue online com amigos</p>
-        <input id="nome" maxlength="14" placeholder="✏️ Seu nome" class="w-full px-4 py-4 rounded-2xl bg-white/20 border border-white/30 placeholder-white/70 text-lg mb-4">
-        <button onclick="criarSala()" class="w-full py-4 rounded-2xl bg-white text-purple-700 font-bold text-lg shadow-xl mb-4 active:scale-95">➕ CRIAR SALA</button>
-        <div class="flex gap-2">
-            <input id="codigo" maxlength="6" placeholder="CÓDIGO" class="flex-1 px-4 py-4 rounded-2xl bg-white/20 border border-white/30 text-center text-xl uppercase tracking-widest">
-            <button onclick="entrarSala()" class="px-5 rounded-2xl bg-green-400 text-green-900 font-bold shadow-xl active:scale-95">ENTRAR</button>
+        <p class="text-center mb-6 opacity-90 text-sm">Jogue online com amigos</p>
+
+        <input id="nome" maxlength="14" placeholder="✏️ Seu nome"
+            class="w-full px-4 py-4 rounded-2xl bg-white/20 border border-white/30 placeholder-white/70 text-lg mb-4 backdrop-blur">
+
+        <button onclick="criarSala()"
+            class="w-full py-4 rounded-2xl bg-white text-purple-700 font-bold text-lg shadow-xl mb-4 active:scale-95">
+            ➕ CRIAR SALA
+        </button>
+
+        <div class="flex gap-2 mb-5">
+            <input id="codigo" maxlength="6" placeholder="CÓDIGO"
+                class="flex-1 px-4 py-4 rounded-2xl bg-white/20 border border-white/30 text-center text-xl uppercase tracking-widest backdrop-blur">
+            <button onclick="entrarSala()"
+                class="px-5 rounded-2xl bg-green-400 text-green-900 font-bold shadow-xl active:scale-95">ENTRAR</button>
         </div>
+
+        <!-- 🖼️ PAINEL DE IMAGEM DE FUNDO -->
+        <details class="bg-white/10 backdrop-blur rounded-2xl p-3 text-sm">
+            <summary class="cursor-pointer select-none font-bold">🖼️ Alterar imagem de fundo</summary>
+            <div class="mt-2 space-y-2">
+                <input id="urlImagem" type="url" placeholder="https://exemplo.com/minha-imagem.jpg"
+                    class="w-full px-3 py-2 rounded-xl bg-white/20 border border-white/30 text-sm">
+                <div class="flex gap-2">
+                    <button onclick="aplicarFundo()"
+                        class="flex-1 py-2 rounded-xl bg-blue-400 text-blue-950 font-bold active:scale-95">Aplicar</button>
+                    <button onclick="removerFundo()"
+                        class="flex-1 py-2 rounded-xl bg-white/20 font-bold active:scale-95">Padrão</button>
+                </div>
+                <p class="text-[11px] opacity-75 text-center">
+                    Dica: use Imgur, Postimage ou GitHub para hospedar grátis
+                </p>
+            </div>
+        </details>
+
         <p id="aviso" class="text-center mt-5 text-yellow-200 text-sm min-h-[1.5rem]"></p>
     </div>
 
-    <!-- TELA 2 - SALA -->
+    <!-- TELA 2 - SALA DE ESPERA -->
     <div id="t2" class="tela">
         <div class="text-center mb-5">
             <p class="text-xs opacity-80">CÓDIGO DA SALA</p>
@@ -59,7 +109,7 @@ Marca</textarea>
         <p id="avisoSala" class="text-center mt-3 text-yellow-200 text-sm">Aguardando o dono começar...</p>
     </div>
 
-    <!-- TELA 3 - JOGO -->
+    <!-- TELA 3 - JOGANDO -->
     <div id="t3" class="tela">
         <div class="flex justify-between items-center mb-2">
             <div><p class="text-xs opacity-80">LETRA</p><p id="letra" class="letra-gigante text-yellow-300"></p></div>
@@ -89,7 +139,7 @@ Marca</textarea>
 </div>
 
 <script>
-// 👇 COLE AQUI SUAS CONFIGURAÇÕES DO FIREBASE (VER PASSO A PASSO ABAIXO)
+// 👇 COLE AQUI SUAS CONFIGURAÇÕES DO FIREBASE
 const firebaseConfig = {
   apiKey: "SUA_CHAVE_AQUI",
   authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -103,9 +153,44 @@ firebase.initializeApp(firebaseConfig);
 const DB = firebase.database();
 const ALFA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+// 🖼️ URL PADRÃO — se quiser que TODOS já entrem com essa imagem, coloque aqui
+// const IMAGEM_PADRAO = "https://i.imgur.com/EXEMPLO.jpg";
+const IMAGEM_PADRAO = ""; 
+
 let sala="", meuId="", dono=false, cats=[], crono=null, tempo=60;
 const aviso = m => document.getElementById("aviso").innerText=m;
-const ir = n => {document.querySelectorAll(".tela").forEach(t=>t.classList.remove("ativa"));document.getElementById("t"+n).classList.add("ativa")};
+
+// ✨ FUNÇÕES DO FUNDO
+function aplicarFundo(url){
+    const endereco = url || document.getElementById("urlImagem").value.trim();
+    if(!endereco) return aviso("Cole o link da imagem primeiro!");
+    document.getElementById("fundo-inicio").style.backgroundImage = `url("${endereco}")`;
+    localStorage.setItem("adedonha_fundo", endereco);
+    aviso("✅ Imagem aplicada!");
+}
+function removerFundo(){
+    document.getElementById("fundo-inicio").style.backgroundImage = "none";
+    localStorage.removeItem("adedonha_fundo");
+    document.getElementById("urlImagem").value = "";
+    if(IMAGEM_PADRAO) aplicarFundo(IMAGEM_PADRAO);
+}
+function carregarFundoSalvo(){
+    const salva = localStorage.getItem("adedonha_fundo");
+    if(salva){
+        document.getElementById("urlImagem").value = salva;
+        aplicarFundo(salva);
+    } else if(IMAGEM_PADRAO){
+        aplicarFundo(IMAGEM_PADRAO);
+    }
+}
+
+// Controle para só mostrar fundo na tela 1
+const ir = n => {
+    document.querySelectorAll(".tela").forEach(t=>t.classList.remove("ativa"));
+    document.getElementById("t"+n).classList.add("ativa");
+    document.body.classList.toggle("tela-ativa-inicio", n===1);
+};
+
 const gerarCod = () => Array.from({length:6},()=>ALFA[~~(Math.random()*26)]).join("");
 
 function criarSala(){
@@ -254,6 +339,9 @@ function reiniciar(){
     });
     ir(2);
 }
+
+// ✨ CARREGA TUDO AO ABRIR
+carregarFundoSalvo();
 </script>
 </body>
 </html>
