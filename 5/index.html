@@ -296,6 +296,7 @@ Profissão</textarea>
     let cronometro = null;
     let scannerQr = null;
     let jogadoresRegistrados = null; // Variável para controlar os jogadores e emitir notificações
+    let lastRespostasHash = ""; // Variável global para controlar quando a tela de votação precisa atualizar palavras novas
 
     function emitirAviso(titulo, texto, tipo = 'error') {
         if (typeof Swal !== 'undefined') {
@@ -417,7 +418,29 @@ Profissão</textarea>
             
             if (dados.status === 'lobby' && ecranAtual !== 'tela-lobby') configurarLobbyVisual();
             if (dados.status === 'jogando' && ecranAtual !== 'tela-jogo') construirAmbienteJogo(dados);
-            if (dados.status === 'votacao' && ecranAtual !== 'tela-votacao') construirAmbienteVotacao(dados);
+            
+            // Controle de votação atualizado para sincronia de palavras em tempo real e salvar auto.
+            if (dados.status === 'votacao') {
+                const currentRespostasStr = JSON.stringify(dados.respostas || {});
+                // Somente re-renderiza se não estiver na tela de votação, OU se houver novas respostas chegando
+                if (ecranAtual !== 'tela-votacao' || lastRespostasHash !== currentRespostasStr) {
+                    
+                    if (ecranAtual === 'tela-jogo') {
+                        // Fui puxado para a tela de votação porque o tempo acabou ou alguém apertou STOP. Salvo minhas palavras imediatamente.
+                        clearInterval(cronometro);
+                        const respostasColetadas = {};
+                        categoriasJogo.forEach((_, idx) => {
+                            const campo = document.getElementById(`resposta_campo_${idx}`);
+                            respostasColetadas[idx] = campo ? campo.value.trim().toUpperCase() : "";
+                        });
+                        db.ref(`salas/${salaAtual}/respostas/${meuId}`).set(respostasColetadas);
+                    }
+                    
+                    lastRespostasHash = currentRespostasStr;
+                    construirAmbienteVotacao(dados);
+                }
+            }
+
             if (dados.status === 'ranking' && ecranAtual !== 'tela-ranking') construirAmbienteRanking(dados);
         });
     }
@@ -509,6 +532,7 @@ Profissão</textarea>
     }
 
     function construirAmbienteJogo(dados) {
+        lastRespostasHash = ""; // Limpa a variável de verificação de respostas na nova rodada
         gerirNavegacaoEcras('tela-jogo');
         categoriasJogo = dados.config.categorias;
         
@@ -611,6 +635,19 @@ Profissão</textarea>
                 const stringExibicao = respostaTexto || "<span class='text-slate-600 italic font-normal text-sm'>Em branco</span>";
                 const classeBorda = comecaComLetraCerta ? 'border-slate-800/80 bg-slate-950/20' : 'border-rose-950/40 bg-rose-950/5';
 
+                // Verificando votos existentes no banco para preservar estado visual (quando as respostas chegam em tempos diferentes)
+                const votosDestaResposta = (dados.votos && dados.votos[idxCat] && dados.votos[idxCat][jogadorId]) || {};
+                const meuVoto = votosDestaResposta[meuId];
+
+                let estiloSim = '', estiloNao = '';
+                if (meuVoto === true) {
+                    estiloSim = 'opacity: 1; border-color: #10b981;';
+                    estiloNao = 'opacity: 0.3; border-color: transparent;';
+                } else if (meuVoto === false) {
+                    estiloSim = 'opacity: 0.3; border-color: transparent;';
+                    estiloNao = 'opacity: 1; border-color: #f43f5e;';
+                }
+
                 estruturaVisualVotos += `
                     <div class="rounded-xl p-3 border ${classeBorda} flex justify-between items-center gap-2">
                         <div>
@@ -620,8 +657,8 @@ Profissão</textarea>
                         
                         ${(jogadorId !== meuId && comecaComLetraCerta && respostaTexto) ? `
                             <div class="flex gap-1 shrink-0">
-                                <button onclick="registarVotoNoBanco(${idxCat}, '${jogadorId}', true, this)" class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs rounded-lg font-bold border border-emerald-500/20 transition-all">👍 Sim</button>
-                                <button onclick="registarVotoNoBanco(${idxCat}, '${jogadorId}', false, this)" class="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-xs rounded-lg font-bold border border-rose-500/20 transition-all">👎 Não</button>
+                                <button onclick="registarVotoNoBanco(${idxCat}, '${jogadorId}', true, this)" style="${estiloSim}" class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs rounded-lg font-bold border border-emerald-500/20 transition-all">👍 Sim</button>
+                                <button onclick="registarVotoNoBanco(${idxCat}, '${jogadorId}', false, this)" style="${estiloNao}" class="px-3 py-1.5 bg-rose-500/10 text-rose-400 text-xs rounded-lg font-bold border border-rose-500/20 transition-all">👎 Não</button>
                             </div>
                         ` : ''}
                     </div>
